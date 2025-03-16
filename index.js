@@ -1,5 +1,7 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
+const express = require('express');
+const app = express();
 
 const randomDelay = (min, max) => {
   const ms = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -9,12 +11,21 @@ const randomDelay = (min, max) => {
 const bots = fs.readFileSync('bots.txt', 'utf-8').split('\n').filter(Boolean);
 const results = [];
 
+app.get('/', (req, res) => res.send('Bot is running')); // نقطة نهاية لـ UptimeRobot
+
 (async () => {
+  app.listen(process.env.PORT || 3000, () => console.log(`Server started on port ${process.env.PORT || 3000}`));
+
   for (let i = 0; i < bots.length; i++) {
     const url = bots[i];
     const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: 'new', // استخدام الوضع الجديد للheadless
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage', // تحسين الأداء في بيئات الحاويات
+        '--disable-gpu', // تعطيل GPU لتوفير الموارد
+      ],
     });
     const page = await browser.newPage();
 
